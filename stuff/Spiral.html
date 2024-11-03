@@ -1,0 +1,71 @@
+<body>
+  <canvas style="position: fixed; top: 0; left: 0"></canvas>
+  <script>
+    const canvas = document.querySelector("canvas");
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const ctx = canvas.getContext("2d");
+
+    function draw(offset = 0) {
+      ctx.save();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+
+      const toRadians = (degrees) => degrees * (Math.PI / 180);
+
+      const startAngle = 0;
+      const endAngle = toRadians(360 * 8);
+      const angleStep = toRadians(1);
+
+      const radiusStep = 0.16;
+
+      let angle = startAngle;
+      let radius = (canvas.height / 2);
+
+      let x0 = null;
+      let y0 = null;
+
+      while (angle < endAngle) {
+        const relativeAngle = (angle - startAngle) / (endAngle - startAngle);
+        const wobblines = 15 + Math.sin(offset / 2) * 5;
+        const radius2 =
+          (radius * (Math.sin(angle * wobblines + offset * 10) + wobblines)) /
+          wobblines;
+
+        const x = radius2 * Math.cos(angle);
+        const y = radius2 * Math.sin(angle);
+
+        if (x0 == null) {
+
+          x0 = x;
+          y0 = y;
+
+          continue;
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(x, y);
+        ctx.strokeStyle = `hsl(${relativeAngle * 360 + offset * 70}, 100%, 50%)`;
+        ctx.lineWidth = (1.1 - relativeAngle) * 15;
+        ctx.lineCap = "round";
+        ctx.stroke();
+
+        x0 = x;
+        y0 = y;
+
+        angle += angleStep;
+        radius -= radiusStep;
+      }
+      ctx.restore();
+    }
+
+    requestAnimationFrame(function animate(now) {
+      draw(now / 2000);
+      requestAnimationFrame(animate);
+    });
+  </script>
+</body>
