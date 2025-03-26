@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <style>
+            * {
+                padding: 0;
+                margin: 0;
+            }
+
+            body {
+                background: black;
+            }
+
+            canvas {
+                position: fixed;
+            }
+        </style>
+        <title>Sierpinski</title>
+    </head>
+
+    <body>
+
+        <canvas></canvas>
+
+        <script>
+
+            const settings = Object.freeze({
+                speed: 0.015,
+                lineWidth: 0.5,
+                minSize: 2,
+                maxDim: 0.2,
+            });
+
+            class Vec2 {
+                constructor(x, y) {
+                    this.x = isNaN(x) ? 0 : x;
+                    this.y = isNaN(y) ? 0 : y;
+                }
+
+                plus(vec2) {
+                    return new Vec2(this.x + vec2.x, this.y + vec2.y);
+                }
+            }
+
+            function vec2(x, y) {
+                return new Vec2(x, y);
+            }
+
+            class Triangle {
+                constructor(a, b, c, height = null, size = null) {
+                    this.a = a;
+                    this.b = b;
+                    this.c = c;
+
+                    this.height = height;
+                    this.size = size;
+                }
+
+                static regular(a, size) {
+                    const height = (Math.SQRT3_4 * size);
+                    return new Triangle(
+                        a,
+                        vec2(a.x + size, a.y),
+                        vec2(a.x + size / 2, a.y - height),
+                        height,
+                        size
+                    );
+                }
+
+                draw(ctx) {
+                    const {a, b, c} = this;
+
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.moveTo(a.x, a.y);
+                    ctx.lineTo(b.x, b.y);
+                    ctx.lineTo(c.x, c.y);
+                    ctx.closePath();
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+
+            window.addEventListener("load", function () {
+                Math.SQRT3_4 = Math.sqrt(3) / 2;
+
+                const canvas = document.querySelector("canvas");
+                const ctx = canvas.getContext("2d");
+
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+
+                let startSize = canvas.width;
+                if (startSize * (Math.SQRT3_4) > canvas.height) {
+                    startSize = canvas.height / Math.SQRT3_4;
+                }
+                const absoluteSpeed = startSize * settings.speed;
+                startSize *= 2;
+
+
+                const sizes = createSizes(
+                    startSize,
+                    startSize * 2,
+                    absoluteSpeed,
+                    absoluteSpeed * 2
+                );
+                const sierpinskiCanvas = createSierpinskiCanvas(startSize * 2);
+
+                ctx.imageSmoothingQuality = "high";
+
+                let sizeIndex = 0;
+                let dim = 0;
+                const maxDim = settings.maxDim;
+                const dimSpeed = maxDim / sizes.length;
+
+                function draw() {
+                    const size = sizes[sizeIndex];
+                    const height = size * Math.SQRT3_4;
+                    sizeIndex++;
+
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(
+                        sierpinskiCanvas,
+                        0,
+                        canvas.height - height,
+                        size,
+                        height
+                    );
+
+                    ctx.fillStyle = `rgba(0, 0, 0, ${dim})`;
+                    dim += dimSpeed;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    if (sizeIndex >= sizes.length) {
+                        sizeIndex = 0;
+                        dim = 0;
+                    }
+
+                    requestAnimationFrame(draw);
+                }
+                draw();
+            });
+
+            function createSizes(startSize, endSize, startSpeed, endSpeed) {
+                const avgSpeed = (startSpeed + endSpeed) / 2;
+                const length = (endSize - startSize) / avgSpeed;
+                const acceleration = (endSpeed - startSpeed) / length;
+                const sizes = new Array(Math.ceil(length));
+
+                let size = startSize;
+                let speed = startSpeed;
+                for (let i = 0; i < length; i++) {
+                    sizes[i] = size;
+                    size += speed;
+                    speed += acceleration;
+                }
+
+                return sizes;
+            }
+
+            function createSierpinskiCanvas(size) {
+                const canvas = document.createElement("canvas");
+                canvas.width = size;
+                canvas.height = size * Math.SQRT3_4;
+                const ctx = canvas.getContext("2d");
+
+                ctx.fillRect(
+                    0, 0,
+                    canvas.width,
+                    canvas.height
+                );
+                ctx.strokeStyle = "white";
+                ctx.lineWidth = settings.lineWidth;
+                strokeSierpinski(
+                    ctx,
+                    vec2(0, canvas.height),
+                    size,
+                    canvas
+                );
+                return canvas;
+            }
+
+            function strokeSierpinski(ctx, a, size, container) {
+                const stack = [];
+                stack.push(Triangle.regular(a, size));
+
+                while (stack.length > 0) {
+                    const triangle = stack.pop();
+
+                    if (triangle.a.x > container.width
+                        || triangle.a.y > container.height) {
+                        //skip if out of container
+                        continue;
+                    } else if (triangle.size < settings.minSize) {
+                        //draw if small enough
+                        triangle.draw(ctx);
+                    } else {
+                        //split into more triangles
+                        const newSize = triangle.size / 2;
+                        const newHeight = triangle.height / 2;
+
+                        const ab = triangle.a.plus(vec2(newSize, 0));
+                        const ac = triangle.a.plus(vec2(
+                            newSize / 2,
+                            -newHeight
+                        ));
+                        const bc = ac.plus(vec2(newSize, 0));
+
+                        //bottom left
+                        stack.push(new Triangle(
+                            triangle.a,
+                            ab,
+                            ac,
+                            newHeight,
+                            newSize
+                        ));
+
+                        //bottom right
+                        stack.push(new Triangle(
+                            ab,
+                            triangle.b,
+                            bc,
+                            newHeight,
+                            newSize
+                        ));
+
+                        //top
+                        stack.push(new Triangle(
+                            ac,
+                            bc,
+                            triangle.c,
+                            newHeight,
+                            newSize
+                        ));
+                    }
+                }
+            }
+
+        </script>
+
+    </body>
+
+</html>

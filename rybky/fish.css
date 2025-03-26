@@ -1,0 +1,104 @@
+.fish-inner {
+  --height: calc(var(--size) * var(--body-ratio));
+  --eye-size: calc((var(--size) / 10) * var(--body-ratio));
+
+  width: var(--size);
+  height: var(--height);
+
+  background: var(--color);
+  border-radius: 50%;
+
+  animation: flap var(--flap-time) infinite linear;
+}
+.fish-inner::before {
+  --tail-height: calc(var(--height) * var(--tail-ratio));
+  --tail-width: calc(var(--tail-height) * 0.75);
+
+  content: "";
+  position: absolute;
+  left: calc(var(--tail-width) * -0.8);
+  top: calc(var(--height) / 2 - var(--tail-height) / 2);
+  border: calc(var(--tail-height) * 0.5) solid transparent;
+  border-left: var(--tail-width) solid var(--color);
+  animation: tail 200ms ease-in-out infinite alternate;
+}
+.fish-inner::after {
+  content: "";
+  position: absolute;
+  top: 30%;
+  right: 20%;
+  width: var(--eye-size);
+  height: var(--eye-size);
+  background: black;
+  border-radius: 50%;
+}
+
+.fish {
+  --size: 100px;
+  --body-ratio: 0.6;
+  --tail-ratio: 0.6;
+  --flap-time: 5s;
+  --color: gold;
+
+  --flap-angle: 45deg;
+  --flap-offset: 200px;
+
+  position: fixed;
+
+  top: var(--top);
+
+  animation: swim var(--swim-time) linear infinite;
+}
+
+@keyframes swim {
+  0% {
+    left: 0;
+    transform: rotateY(0);
+  }
+  50% {
+    left: calc(100% + var(--size) * -1);
+    transform: rotateY(0);
+  }
+  52% {
+    transform: rotateY(180deg);
+  }
+
+  98% {
+    transform: rotateY(180deg);
+  }
+  100% {
+    left: 0;
+    transform: rotateY(0);
+  }
+}
+
+@keyframes flap {
+  0% {
+    transform: perspective(var(--perspective)) translateZ(0) rotateY(0);
+  }
+  25% {
+    transform: perspective(var(--perspective))
+      translateZ(calc(var(--flap-offset) / 2))
+      rotateY(calc(-1 * var(--flap-angle)));
+  }
+  50% {
+    transform: perspective(var(--perspective)) translateZ(var(--flap-offset))
+      rotateY(0);
+  }
+  75% {
+    transform: perspective(var(--perspective))
+      translateZ(calc(var(--flap-offset) / 2)) rotateY(var(--flap-angle));
+  }
+  100% {
+    transform: perspective(var(--perspective)) translateZ(0) rotateY(0);
+  }
+}
+
+@keyframes tail {
+  0% {
+    transform: perspective(var(--perspective)) rotateY(-40deg);
+  }
+  100% {
+    transform: perspective(var(--perspective)) rotateY(40deg);
+  }
+}
