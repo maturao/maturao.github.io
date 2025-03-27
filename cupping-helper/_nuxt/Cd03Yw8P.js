@@ -1,0 +1,1 @@
+import{e as a,f as o,c as s,o as r,a as i,n as c}from"./BIBKp4Ec.js";const m=a({__name:"index",async setup(p){let e,t;return[e,t]=o(()=>c("/cupping")),await e,t(),(_,n)=>(r(),s("div",null,n[0]||(n[0]=[i("h1",null,"Redirecting...",-1)])))}});export{m as default};
