@@ -1,0 +1,1 @@
+import{f as n,$ as s,c as o,a as r,t as c,a0 as i,o as _}from"./BUZv4J0_.js";const u=n({__name:"index",async setup(l){let e,t;return[e,t]=s(()=>i("/cup")),await e,t(),(a,p)=>(_(),o("div",null,[r("h1",null,c(a.$t("redirecting")),1)]))}});export{u as default};
